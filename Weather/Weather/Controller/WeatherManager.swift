@@ -80,7 +80,9 @@ struct WeatherManager {
                     delegate?.didUpdateCityName(self, cityName: firstLoc)
                 }
             } else {
-                print(error?.localizedDescription)
+                if let error = error {
+                    print(error.localizedDescription)
+                }
             }
         }
     }

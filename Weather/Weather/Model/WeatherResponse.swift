@@ -2,7 +2,7 @@
 //  WeatherResponse.swift
 //  Weather
 //
-//  Created by James Baldwin on 8/23/22.
+//  Created by James Baldwin on 7/26/22.
 //
 
 import Foundation
@@ -14,18 +14,7 @@ struct WeatherResponse: Codable {
     let current: Current
     var hourly: [Hourly]
     var daily: [Daily]
-    
-    mutating func sortHourlyArray() {
-        hourly.sort {(hour1: Hourly, hour2: Hourly) -> Bool in
-            return hour1.dt < hour2.dt
-        }
-    }
-    
-    mutating func sortDailyArray() {
-        daily.sort{ (day1, day2) -> Bool in
-            return day1.dt < day2.dt
-        }
-    }
+
 }
 
 struct Current: Codable {

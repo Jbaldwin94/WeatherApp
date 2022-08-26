@@ -19,13 +19,14 @@ class WeatherCollectionViewCell: UICollectionViewCell {
         let dateArray = date.components(separatedBy: "at")
         
         if isDaily {
-            timeDateLabel.text = dateArray[0]
+            let nDate = dateArray[0].components(separatedBy: ",")
+            timeDateLabel.text = nDate[0]
         } else {
             timeDateLabel.text = dateArray[1]
         }
         
         weatherImage.image = UIImage(named: weatherModel.conditionString)
-        temperatureLabel.text = weatherModel.temperatureString
+        temperatureLabel.text = ("\(weatherModel.temperatureString)°")
     }
     
     

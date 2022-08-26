@@ -33,7 +33,6 @@ class WeatherViewController: UIViewController {
         self.locationManager.requestAlwaysAuthorization()
         self.locationManager.requestWhenInUseAuthorization()
         
-        
         if CLLocationManager.locationServicesEnabled() {
             locationManager.delegate = self
             locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
@@ -41,7 +40,6 @@ class WeatherViewController: UIViewController {
         }
         
         setGradient(color: UIColor.cyan.cgColor, color2: UIColor.blue.cgColor)
-        
         DataService.weatherManager.delegate = self
         
     }
@@ -54,7 +52,6 @@ class WeatherViewController: UIViewController {
         didSelectDaily = true
         weatherCollectionView.reloadData()
     }
-    
 }
 
 //MARK: - Functions
@@ -65,25 +62,6 @@ extension WeatherViewController {
         gradient.colors = [color, color2]
         
         view.layer.insertSublayer(gradient, at: 0)
-    }
-    
-    func getCityName(location: CLLocationCoordinate2D) -> String {
-        let lon = location.longitude
-        let lat = location.latitude
-        let loc = CLLocation(latitude: lat, longitude: lon)
-        
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(loc) { placemarks, error in
-            if error == nil {
-                let firstLocation = placemarks?[0].locality
-                if let name = firstLocation {
-                    self.cityName = name
-                }
-            } else {
-                print(error?.localizedDescription)
-            }
-        }
-        return cityName
     }
     
     //MARK: CreateCellData
@@ -116,30 +94,9 @@ extension WeatherViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let locValue: CLLocationCoordinate2D = manager.location?.coordinate else { return }
         
-        getCityName(location: locValue)
-        
         let url = "\(DataService.weatherManager.BASE_URL)&lat=\(locValue.latitude)&lon=\(locValue.longitude)&appid=\(DataService.weatherManager.apiKey)&units=imperial"
         
         DataService.weatherManager.performRequest(with: url)
-    }
-    
-    func getPlace(for location: CLLocation, completion: @escaping (CLPlacemark?) -> Void) {
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { placemarks, error in
-            guard error == nil else {
-                print("ERROR: \(String(describing: error))")
-                completion(nil)
-                return
-            }
-            
-            guard let placemark = placemarks?[0] else {
-                print("ERROR: \(#function): placemark is nil")
-                completion(nil)
-                return
-            }
-            
-            completion(placemark)
-        }
     }
 }
 
@@ -173,15 +130,12 @@ extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataS
                     return cell
                 }
             }
-            
         }
         return UICollectionViewCell()
     }
-    
 }
 
-
-
+//MARK: WeatherManagerDelegate
 extension WeatherViewController: WeatherManagerDelegate {
     func didUpdateCityName(_ weatherManager: WeatherManager, cityName: String) {
         self.currentLocationLabel.text = cityName
@@ -198,7 +152,7 @@ extension WeatherViewController: WeatherManagerDelegate {
     
     func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
         DispatchQueue.main.async {
-            self.currentTempLabel.text = weather.temperatureString
+            self.currentTempLabel.text = ("\(weather.temperatureString)°")
             self.currentWeatherLabel.text = weather.description
             self.currentDateLabel.text = weather.formattedDate
             self.currentWeatherImage.image = UIImage(named: weather.conditionString)
