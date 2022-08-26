@@ -67,21 +67,6 @@ extension WeatherViewController {
         view.layer.insertSublayer(gradient, at: 0)
     }
     
-    func formatDate(dt: Int, dailySelected: Bool) -> String {
-        let date = Date(timeIntervalSince1970: TimeInterval(dt))
-        let dateFormatter = DateFormatter()
-        if dailySelected {
-            dateFormatter.dateStyle = DateFormatter.Style.medium
-        } else {
-            dateFormatter.timeStyle = DateFormatter.Style.short
-        }
-        dateFormatter.timeZone = .current
-        let localDate = dateFormatter.string(from: date)
-        
-        
-        return localDate
-    }
-    
     func getCityName(location: CLLocationCoordinate2D) -> String {
         let lon = location.longitude
         let lat = location.latitude
@@ -99,6 +84,30 @@ extension WeatherViewController {
             }
         }
         return cityName
+    }
+    
+    //MARK: CreateCellData
+    func createCellData(hourly: Hourly?, daily: Daily?) -> WeatherModel {
+        if let hourly = hourly {
+            let id = hourly.weather[0].id
+            let temp = hourly.temp
+            let dt = hourly.dt
+            let weather = WeatherModel(conditionId: id, cityName: "", temperature: temp, dt: dt, description: "")
+            
+            return weather
+        }
+        
+        if let daily = daily {
+            let id = daily.weather[0].id
+            let temp = daily.temp.max
+            let dt = daily.dt
+            let description = daily.weather[0].description
+            let weather = WeatherModel(conditionId: id, cityName: "", temperature: temp, dt: dt, description: description)
+            
+            return weather
+        }
+        
+        return WeatherModel(conditionId: 1, cityName: "", temperature: 0.0, dt: 0, description: "")
     }
 }
 
@@ -145,42 +154,39 @@ extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataS
         if let cell = weatherCollectionView.dequeueReusableCell(withReuseIdentifier: WeatherCollectionViewCell.reuseID, for: indexPath) as? WeatherCollectionViewCell {
             if !didSelectDaily {
                 if !hourlyWeather.isEmpty {
-                    let id = hourlyWeather[indexPath.row].weather[0].id
-                    let temp = hourlyWeather[indexPath.row].temp
-                    let dt = hourlyWeather[indexPath.row].dt
-                    let date = formatDate(dt: dt, dailySelected: didSelectDaily)
-                    print("DATE: \(date)")
-                    let weather = WeatherModel(conditionId: id, cityName: date, temperature: temp, dt: dt, description: "")
-                    cell.updateCell(weatherModel: weather)
+                    let weatherData = hourlyWeather[indexPath.row]
+                    let weather = createCellData(hourly: weatherData, daily: nil)
+                    cell.updateCell(weatherModel: weather, isDaily: didSelectDaily)
                     return cell
                 } else {
-                    let weather = WeatherModel(conditionId: 301, cityName: "...", temperature: 0.0, dt: 0, description: "")
-                    cell.updateCell(weatherModel: weather)
+                    cell.updateCell(weatherModel: createCellData(hourly: nil, daily: nil), isDaily: didSelectDaily)
                     return cell
                 }
             } else {
                 if !dailyWeather.isEmpty {
-                    let id = dailyWeather[indexPath.row + 1].weather[0].id
-                    let temp = dailyWeather[indexPath.row + 1].temp.max
-                    let dt = dailyWeather[indexPath.row + 1].dt
-                    let date = formatDate(dt: dt, dailySelected: didSelectDaily)
-                    let weather = WeatherModel(conditionId: id, cityName: "\(date)", temperature: temp, dt: dt, description: "")
-                    cell.updateCell(weatherModel: weather)
+                    let weatherData = dailyWeather[indexPath.row + 1]
+                    let weather = createCellData(hourly: nil, daily: weatherData)
+                    cell.updateCell(weatherModel: weather, isDaily: didSelectDaily)
                     return cell
                 } else {
-                    let weather = WeatherModel(conditionId: 301, cityName: "...", temperature: 0.0, dt: 0, description: "")
-                    cell.updateCell(weatherModel: weather)
+                    cell.updateCell(weatherModel: createCellData(hourly: nil, daily: nil), isDaily: didSelectDaily)
                     return cell
                 }
             }
             
         }
         return UICollectionViewCell()
+    }
+    
 }
 
-}
+
 
 extension WeatherViewController: WeatherManagerDelegate {
+    func didUpdateCityName(_ weatherManager: WeatherManager, cityName: String) {
+        self.currentLocationLabel.text = cityName
+    }
+    
     func didUpdateDaily(_ weatherManager: WeatherManager) {
         dailyWeather = DataService.shared.dailyWeather
         hourlyWeather = DataService.shared.hourlyWeather
@@ -188,12 +194,10 @@ extension WeatherViewController: WeatherManagerDelegate {
         DispatchQueue.main.async {
             self.weatherCollectionView.reloadData()
         }
-        
     }
     
     func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
         DispatchQueue.main.async {
-            self.currentLocationLabel.text = self.cityName
             self.currentTempLabel.text = weather.temperatureString
             self.currentWeatherLabel.text = weather.description
             self.currentDateLabel.text = weather.formattedDate
@@ -202,8 +206,6 @@ extension WeatherViewController: WeatherManagerDelegate {
     }
     
     func didFailWithError(error: Error) {
-        print(error)
+        print(error.localizedDescription)
     }
-    
-    
 }

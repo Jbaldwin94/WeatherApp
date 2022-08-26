@@ -37,20 +37,6 @@ struct WeatherModel {
         }
     }
     
-    func formatDate(dt: Int, dailySelected: Bool) -> String {
-        let date = Date(timeIntervalSince1970: TimeInterval(dt))
-        let dateFormatter = DateFormatter()
-        if dailySelected {
-            dateFormatter.dateStyle = DateFormatter.Style.medium
-        } else {
-            dateFormatter.timeStyle = DateFormatter.Style.short
-        }
-        dateFormatter.timeZone = .current
-        let localDate = dateFormatter.string(from: date)
-        
-        return localDate
-    }
-    
     var formattedDate: String {
         let date = Date(timeIntervalSince1970: TimeInterval(dt))
         let dateFormatter = DateFormatter()
@@ -58,8 +44,6 @@ struct WeatherModel {
         dateFormatter.timeStyle = DateFormatter.Style.short
         dateFormatter.timeZone = .current
         let dateString = dateFormatter.string(from: date)
-        let dateArray = dateString.components(separatedBy: "at")
-        print("Date1: " + dateArray[0] + "Date2: " + dateArray[1])
         
         return dateString
     }
